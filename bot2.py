@@ -17,7 +17,7 @@ kicked_user = None
 yes_votes = 0
 no_votes = 0
 use_vote_system = True
-channel = None
+channel = bot.get_all_channels()
 
 @bot.event
 async def on_ready():
@@ -107,6 +107,7 @@ async def votekick(ctx, user:discord.Member):
     global yes_votes
     global no_votes
     global use_vote_system
+    global voted_users
     if use_vote_system:
         if type(user) != discord.Member:
             await ctx.send("you need to select someone to vote kick first!")
@@ -121,21 +122,69 @@ async def votekick(ctx, user:discord.Member):
             #await ctx.send("type \"vote yes\" or \"vote no\" to cast your vote!\n if the majority of votes are in favor, the defendent shall be kicked")
             await asyncio.sleep(15)
             await ctx.send("voting is finished!")
+            voted_users = []
             is_voting = False
+
             await ctx.send("total yes votes: " + str(yes_votes) + "\ntotal no votes: " + str(no_votes))
             if yes_votes > no_votes:
-                await ctx.send("By law of the people of " + ctx.message.guild.name + ", the defendant "+ user.mention+ "is guilty! Prepare to be kicked. \n You have ten seconds left to say your last words.")
+                if yes_votes > 0:
+                    await ctx.send("By law of the people of " + ctx.message.guild.name + ", the defendant "+ user.mention+ "is guilty! Prepare to be kicked. \n You have ten seconds left to say your last words.")
+
+                    try:
+                        invite = await ctx.channel.create_invite()
+                    except Exception:
+                        await ctx.send("rip, I don't have permissions, or the user trying to be kicked is admin or some shit")
+                        yes_votes = 0
+                        no_votes = 0
+                        return
+
+                    await user.send(invite)
+
+                    await user.send("You have been kicked. You can get back in the server with the above invite link.")
+                    past_kicked_users[user] = user.roles
+                    #old_roles = user
+
+                    await asyncio.sleep(10)
+                    try:
+                        await user.kick()
+                    except Exception:
+                        await ctx.send("rip, I don't have permissions, or the user trying to be kicked is admin or some shit")
+                        yes_votes = 0
+                        no_votes = 0
+                else:
+                    await ctx.send("there are not enough users to votkick this user! (required: 3)")
             yes_votes = 0
             no_votes = 0
 
-            invite = await ctx.channel.create_invite()
-            await user.send(invite)
 
-            await user.send("You have been kicked. You can get back in the server with the above invite link.")
-            past_kicked_users[user] = user.roles
-            #old_roles = user
-            await asyncio.sleep(10)
-            await user.kick()
+@bot.command()
+async def die(ctx):
+    await ctx.send("k bitch :(")
+    quit()
+
+async def rate_meme(ctx):
+    rand_number = random.randint(0, 4)
+    file_name = r"c:\location\of\the_file_to\send" + str(rand_number)+ ".mp4"
+    area = ctx.message.channel
+    await ctx.send(file=discord.File(file_name))
+
+
+
+@bot.command()
+async def fortnite(ctx, msg:int):
+    lmao = '''@everyone AMONGUS Among Us[c] is an online multiplayer social deduction game developed and published by American game studio Innersloth. It was released on iOS and Android devices in June 2018 and on Windows in November 2018, 
+    featuring cross-platform play between these platforms.[4] The game was also ported for the Nintendo Switch in December 2020, and 
+    has planned releases for the Xbox One and Xbox Series X and Series S in 2021. The game was inspired by the party game Mafia and the science fiction horror film The Thing, and since the release of its first map, The Skeld, other maps were added into the game. A fourth map, "The Airship", is set to be released in March 2021.
+
+The game takes place in a space-themed setting, in which players each take on one of two roles, most being Crewmates, and a predetermined number being Impostors.[d] The goal of the Crewmates is to identify the Impostors, 
+eliminate them, and complete tasks around the map; the Impostors' goal is to covertly sabotage and kill the Crewmates before they complete all of their tasks. Players suspected to 
+be Impostors may be eliminated via a plurality vote, which any player may initiate by calling an emergency meeting (except during a crisis) or reporting a dead body. Crewmates win if all Impostors are eliminated or all tasks are completed whereas Impostors win if there is an equal number of Impostors and Crewmates, or if a critical sabotage goes unresolved.'''
+
+    if msg:
+        for x in range(0, msg):
+            await ctx.send(lmao)
+    else:
+        await ctx.send(lmao)
 
 
 
